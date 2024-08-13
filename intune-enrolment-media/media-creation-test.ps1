@@ -1,3 +1,5 @@
+## Initialize variables.
+
 $TEMPPATH = "C:\$(New-GUID)"
 $NEWISONAME = "$TEMPPATH\WindowAutopilot.iso"
 $ISOCONTENTS = "$TEMPPATH\iso\"
@@ -5,6 +7,23 @@ $INSTALLWIM = "$ISOCONTENTS\sources\install.wim"
 $INSTALLWIMTEMP = "$TEMPPATH\installtemp.wim"
 $MOUNTDIR = "$TEMPPATH\mount"
 
+<#
+.SYNOPSIS
+A function to validate that any user-provided paths are actually valid.
+Needed to ensure that AutoPilot config and ISO paths are valid file paths and not junk.
+
+.DESCRIPTION
+Long description
+
+.PARAMETER VALIDNAME
+VALIDNAME is the name of the path being validated.
+
+.PARAMETER VALIDATE
+VALIDATE is the full path to test.
+
+.EXAMPLE
+validatePath("My file","C:\MyFolder\MyFile")
+#>
 function validatePath([string]$VALIDNAME,[string]$VALIDATE) {
     $EXISTS = $false
     while (-not $EXISTS) {
@@ -21,9 +40,6 @@ function validatePath([string]$VALIDNAME,[string]$VALIDATE) {
 }
 $AUTOPILOTCONFIG = validatePath("AutoPilot Configuration file","$AUTOPILOTCONFIG")
 $ISO = validatePath("ISO file", "$ISO")
-
-Write-Host "$AUTOPILOTCONFIG"
-Write-Host "$ISO"
 
 ## Mount disk image to drive.
 Write-Host " Mounting Windows ISO..."
@@ -109,7 +125,28 @@ Write-Host " $NEWISONAME successfully created!" -ForegroundColor Green
 
 ## Cleanup
 
-Write-Host "Ejecting ISO"
-$DISMOUNT = Dismount-DiskImage $ISO
-Write-Host "ISO ejected."
+Write-Host " Ejecting ISO"
+Dismount-DiskImage $ISO
+Write-Host " ISO ejected."
 
+Write-Host " Dismounting install.wim"
+DISM /Unmount-WIM /mountdir:$MOUNTDIR /discard
+Write-Host " Image dismounted."
+
+Write-Host " Removing temporary install.wim"
+Remove-Item $INSTALLWIMTEMP
+Write-Host " Removed."
+
+Write-Host " Removing extracted ISO contents"
+Remove-Item $ISOCONTENTS -Recurse -Force
+Write-Host " Removed."
+
+Write-Host " Removing mount folder."
+Remove-Item "$TEMPPATH\MOUNT" -Recurse -Force
+Write-Host " Removed."
+
+Write-Host " Removing oscdimg folder."
+Remove-Item "$TEMPPATH\oscdimg" -Recurse -Force
+Write-Host " Removed."
+
+Write-Host " ISO successfully built."
