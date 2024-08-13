@@ -1,18 +1,29 @@
-$COPYAUTOPILOTSCRIPTS = $true
-$COPYAUTOPILOTSCRIPTS = "C:\ISO\AutopilotConfigurationFile.json"
-
-if (Test-Path -Path "$COPYAUTOPILOTSCRIPTS") {
-    Write-Host " Autopilot trigger enabled! Copying from: $COPYAUTOPILOTSCRIPTS" -ForegroundColor Yellow
-}
-
-$ISO = Read-Host -Prompt " Enter full path to ISO image"
-
 $TEMPPATH = "C:\$(New-GUID)"
 $NEWISONAME = "$TEMPPATH\WindowAutopilot.iso"
 $ISOCONTENTS = "$TEMPPATH\iso\"
 $INSTALLWIM = "$ISOCONTENTS\sources\install.wim"
 $INSTALLWIMTEMP = "$TEMPPATH\installtemp.wim"
 $MOUNTDIR = "$TEMPPATH\mount"
+
+function validatePath([string]$VALIDNAME,[string]$VALIDATE) {
+    $EXISTS = $false
+    while (-not $EXISTS) {
+        $VALIDNAME = $VALIDNAME.Trim()
+        $VALIDATE = Read-Host -Prompt " [*] Enter full path to $VALIDNAME"
+        if (Test-Path -Path "$VALIDATE") {
+            Write-Host " [+] Path valid!" -ForegroundColor Green
+            Write-Verbose " [+] Path validated at $VALIDATE"
+            return "$VALIDATE"
+        } else {
+            Write-Host " [-] Path invalid!" -ForegroundColor Red
+        }
+    }
+}
+$AUTOPILOTCONFIG = validatePath("AutoPilot Configuration file","$AUTOPILOTCONFIG")
+$ISO = validatePath("ISO file", "$ISO")
+
+Write-Host "$AUTOPILOTCONFIG"
+Write-Host "$ISO"
 
 ## Mount disk image to drive.
 Write-Host " Mounting Windows ISO..."
@@ -54,7 +65,7 @@ Write-Host " installtemp.wim successfully mounted!" -ForegroundColor Green
 
 ## Inject JSON file.
 Write-Host " Attempting to inject Autopilot configuration..." -ForegroundColor Yellow
-$COPYAUTOPILOTSCRIPTS | Set-Content -Encoding Ascii "$MOUNTDIR\Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json"
+$AUTOPILOTCONFIG | Set-Content -Encoding Ascii "$MOUNTDIR\Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json"
 Write-Host " Successfully injected Autopilot configuration!" -ForegroundColor Green
 
 ## Remove read-only flag from install.wim file.
@@ -98,7 +109,7 @@ Write-Host " $NEWISONAME successfully created!" -ForegroundColor Green
 
 ## Cleanup
 
-if(Test-Path "$TEMPPATH") {
-    Write-Output "Deleting $TEMPPATH..."
-    Remove-Item -Path $TEMPPATH -Recurse
-}
+Write-Host "Ejecting ISO"
+$DISMOUNT = Dismount-DiskImage $ISO
+Write-Host "ISO ejected."
+
