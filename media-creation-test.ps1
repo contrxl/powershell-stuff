@@ -15,7 +15,7 @@ $INSTALLWIMTEMP = "$TEMPPATH\installtemp.wim"
 $MOUNTDIR = "$TEMPPATH\mount"
 
 ## Mount disk image to drive.
-Write-Host "Mounting Windows ISO..."
+Write-Host " Mounting Windows ISO..."
 $MOUNTISO = Mount-DiskImage -ImagePath $ISO -StorageType ISO -PassThru
 $MOUNTDRIVE = ($MOUNTISO | Get-Volume).DriveLetter
 $MOUNTDRIVE = ($MOUNTDRIVE + ":\")
@@ -71,6 +71,30 @@ Write-Host " Successfully removed!" -ForegroundColor Green
 Write-Host " Exporting new install.wim to \sources..." -ForegroundColor Yellow
 Export-WindowsImage -SourceImagePath $INSTALLWIMTEMP -DestinationImagePath $INSTALLWIM -SourceIndex $IMAGEINDEX
 Write-Host " Successfully created!"
+
+## Use oscdimg to create ISO.
+Write-Host " Building oscdimg directory..."
+New-Item -Path "$TEMPPATH\oscdimg" -ItemType Directory
+Write-Host " Directory built!" -ForegroundColor Green
+
+## Use iwr to get file.
+$URL = "https://github.com/andrew-s-taylor/oscdimg/archive/main.zip"
+$OUTPUT = "$TEMPPATH\oscdimg.zip"
+Write-Host " Downloading OSCDIMG..."
+Invoke-WebRequest -Uri $URL -Outfile $OUTPUT -Method Get
+Write-Host " Download complete!" -ForegroundColor Green
+
+## Unzip oscdimg and remove .zip file.
+Write-Host " Unzipping and cleaning .zip..."
+Expand-Archive $OUTPUT -DestinationPath "$TEMPPATH\oscdimg" -Force
+Write-Host " Unzipped, removing .zip..."
+Remove-Item $OUTPUT -Force
+Write-Host " .zip file removed!" -ForegroundColor Green
+
+## Create ISO from install image.
+Write-Host " Building ISO..." -ForegroundColor Yellow
+& "$TEMPPATH\oscdimg\oscdimg-main\oscdimg.exe" -b"$MOUNTDRIVE\efi\microsoft\boot\efisys.bin" -pEF -u1 -udfver102 $ISOCONTENTS $NEWISONAME
+Write-Host " $NEWISONAME successfully created!" -ForegroundColor Green
 
 ## Cleanup
 
