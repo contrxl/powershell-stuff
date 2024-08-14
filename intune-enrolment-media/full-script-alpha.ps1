@@ -7,7 +7,7 @@ Write-Host " It is recommended you remove all other USB drives!"
 Write-Host
 Write-Host " Checking for connected disks. This may take a moment..."
 Write-Host
-Write-Host " The selected disk will be completely formatted!" -BackgroundColor White -ForegroundColor DarkMagenta 
+Write-Host " The selected disk will be completely erased!" -BackgroundColor White -ForegroundColor DarkMagenta 
 Write-Host " Any data will not be recoverable." -BackgroundColor White -ForegroundColor DarkMagenta 
 Write-Host " Ensure you do NOT format your boot drive!" -BackgroundColor White -ForegroundColor DarkMagenta 
 Write-Host " If you are unsure, press CTRL + C to abort." -BackgroundColor White -ForegroundColor DarkMagenta 
