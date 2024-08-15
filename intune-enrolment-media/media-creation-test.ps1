@@ -110,7 +110,7 @@ Copy-Item -Path $MOUNTDRIVE -Destination $ISOCONTENTS -Recurse
 Write-Host " [+] Copying completed!" -ForegroundColor Green
 Write-Host " [*] Copying temporary install.wim for file manipulation."
 Copy-Item -Path $INSTALLWIM -Destination $INSTALLWIMTEMP
-Write-Host " [+] copying completed!" -ForegroundColor Green
+Write-Host " [+] Copying completed!" -ForegroundColor Green
 
 ## Remove read-only flag from installtemp.wim file.
 Write-Host " [*] Removing Read-Only flag from installtemp.wim."
