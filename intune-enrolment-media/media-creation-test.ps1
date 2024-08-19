@@ -1,3 +1,10 @@
+$ADMIN = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($ADMIN) {
+} else {
+    Write-Host "Script must be run as administrator, exiting!" -ForegroundColor Red
+    Exit 1
+}
+
 ## Bootable Meida
 ## Start Instructions
 
@@ -17,6 +24,7 @@ Write-Host " If you are unsure, press CTRL + C to abort." -BackgroundColor White
 Get-Disk | Format-Table Number, Friendlyname, HealthStatus, PartitionStyle,@{n='Size';e={[int]($_.Size/1GB)}}
 
 ## Display disk number and get confirmation of wipe.
+
 
 $DISKNUMBER = Read-Host -Prompt " Select a disk and press enter to confirm"
 Write-Host " WARNING! The following disk will be erased:" -ForegroundColor Red
@@ -80,6 +88,7 @@ function validatePath([string]$VALIDNAME,[string]$VALIDATE) {
 }
 $AUTOPILOTCONFIG = validatePath("AutoPilot Configuration file","$AUTOPILOTCONFIG")
 $ISO = validatePath("ISO file", "$ISO")
+$ISOOUT = validatePath("output directory", "$ISOOUT")
 
 ## Try to mount disk image to drive.
 try {
@@ -253,7 +262,7 @@ Write-Host ""
 $i = 0
 Foreach ($FILE in $FILES) {
     $i++
-    Write-Progress -activity "Copying files to USB..." -status "$FILE ($i of $FILECOUNT)" -percentcomplete (($i/$FILECOUNT)*100)
+    Write-Progress -Activity "Copying files to USB..." -status "$FILE ($i of $FILECOUNT)" -percentcomplete (($i/$FILECOUNT)*100)
     if ($FILE.psiscontainer) {
         $SOURCEFILECONTAINER = $FILE.parent
     } else {
@@ -263,5 +272,8 @@ Foreach ($FILE in $FILES) {
     Copy-Item $FILE.fullname ($BUILDSTICK + $RELATIVEPATH) -Force
 }
 
+Write-Host " [*] Moving $AUTOPILOTISO to $ISOOUT"
+Move-Item -Path "$AUTOPILOTISO" -Destination "$ISOOUT\WindowsAutopilot.iso"
+Write-Host " [+] ISO moved to $ISOOUT\WindowsAutopilot.iso" -ForegroundColor Green
 
 Write-Host "Drive built!" -ForegroundColor Green
